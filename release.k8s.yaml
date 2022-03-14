@@ -695,6 +695,66 @@ spec:
       template:
         # Using the templateRef from retest since they are mostly the same
         ref: pipelines-as-code-bitbucket-server-pullreq
+
+    # GitHub When sending a new Pull Request
+    - name: gitlab-merge-request
+      interceptors:
+        - ref:
+            name: gitlab
+          params:
+            - name: "secretRef"
+              value:
+                secretName: "pipelines-as-code-secret"
+                secretKey: "webhook.secret"
+            - name: eventTypes
+              value:
+                - Merge Request Hook
+                - Push Hook
+        - ref:
+            name: cel
+          params:
+            - name: overlays
+              value:
+                - key: payload
+                  expression: "base64.encode(bytes(body.marshalJSON()))"
+      bindings:
+        - ref: pipelines-as-code-gitlab
+      template:
+        ref: pipelines-as-code-gitlab
+
+    # When you have a /ok-to-test or /retest in a comment to retest a PR
+    - name: gitlab-notes
+      interceptors:
+        - ref:
+            name: gitlab
+          params:
+            - name: "secretRef"
+              value:
+                secretName: "pipelines-as-code-secret"
+                secretKey: "webhook.secret"
+            - name: eventTypes
+              value:
+                - Note Hook
+
+        - name: Filter comment on notes
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                  body.merge_request.state == 'opened' &&
+                  body.object_attributes.note.matches('(^|\\r\\n)/(retest|ok-to-test)([ ]*$|$|\\r\\n)')
+        - ref:
+            name: cel
+          params:
+            - name: overlays
+              value:
+                - key: payload
+                  expression: "base64.encode(bytes(body.marshalJSON()))"
+      bindings:
+        - ref: pipelines-as-code-gitlab
+      template:
+        ref: pipelines-as-code-gitlab
 ---
 # Copyright 2021 Red Hat
 #
@@ -728,7 +788,7 @@ spec:
     - name: head_sha
       value: $(body.check_run.check_suite.head_sha)
     - name: trigger_target
-      value: "issue-recheck"
+      value: "pull_request"
     - name: event_type
       value: $(header.X-GitHub-Event)
     - name: "ghe_host"
@@ -925,7 +985,7 @@ metadata:
 spec:
   params:
     - name: trigger_target
-      value: "pull-request"
+      value: pull_request
     - name: "event_type"
       value: $(header.X-GitHub-Event)
     - name: "ghe_host"
@@ -1323,7 +1383,7 @@ metadata:
 spec:
   params:
     - name: trigger_target
-      value: "retest-comment"
+      value: pull_request
     - name: action
       value: $(body.action)
     - name: event_type
@@ -1492,7 +1552,7 @@ spec:
     - name: action
       value: "$(body.action)"
     - name: trigger_target
-      value: "ok-to-test-comment"
+      value: pull_request
     - name: event_type
       value: $(header.X-GitHub-Event)
     - name: "ghe_host"
@@ -1945,7 +2005,7 @@ spec:
     - name: event_type
       value: "pull_request"
     - name: trigger_target
-      value: "retest-comment"
+      value: "pull_request"
 
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
@@ -2426,8 +2486,7 @@ spec:
     - name: event_type
       value: "pull_request"
     - name: trigger_target
-      value: "retest-comment"
-
+      value: "pull_request"
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -2444,3 +2503,94 @@ spec:
       value: "pull_request"
     - name: trigger_target
       value: "ok-to-test-comment"
+---
+# Copyright 2021 Red Hat
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: pipelines-as-code-gitlab
+  namespace: pipelines-as-code
+  labels:
+    app.kubernetes.io/version: "devel"
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: pipelines-as-code
+spec:
+  params:
+    - name: event_type
+      value: "$(header.X-Gitlab-Event)"
+    - name: payload
+      value: $(extensions.payload)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: pipelines-as-code-gitlab
+  namespace: pipelines-as-code
+  labels:
+    app.kubernetes.io/version: "devel"
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: pipelines-as-code
+spec:
+  params:
+    - name: event_type
+    - name: payload
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: TaskRun
+      metadata:
+        generateName: pipelines-as-code-run-
+        labels:
+          app.kubernetes.io/version: "devel"
+          app.kubernetes.io/managed-by: pipelines-as-code
+      spec:
+        serviceAccountName: pipelines-as-code-sa-el
+        params:
+          - name: event_type
+            value: $(tt.params.event_type)
+          - name: payload
+            value: $(tt.params.payload)
+        taskSpec:
+          params:
+            - name: event_type
+              type: string
+            - name: payload
+              type: string
+          steps:
+            - name: apply-and-launch
+              env:
+                - name: PAC_GIT_PROVIDER_TYPE
+                  value: "gitlab"
+                - name: PAC_PAYLOAD_FILE
+                  value: "/tmp/payload.json"
+                - name: PAC_WEBHOOK_TYPE
+                  value: "$(params.event_type)"
+              imagePullPolicy: Always
+              image: "quay.io/openshift-pipeline/pipelines-as-code:main"
+              script: |
+                #!/usr/bin/env bash
+                set -euf
+
+                echo $(tt.params.payload)| base64 --decode |tee ${PAC_PAYLOAD_FILE}
+                echo
+
+                env|grep '^PAC'
+                pipelines-as-code
+          workspaces:
+            - name: secrets
+        workspaces:
+          - name: secrets
+            secret:
+              secretName: pipelines-as-code-secret
