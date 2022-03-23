@@ -59,9 +59,6 @@ metadata:
     app.kubernetes.io/instance: default
     app.kubernetes.io/part-of: pipelines-as-code
 rules:
-  - apiGroups: ["triggers.tekton.dev"]
-    resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers"]
-    verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     # secrets are only needed for Github/Gitlab interceptors, serviceaccounts only for per trigger authorization
     resources: ["configmaps", "secrets"]
@@ -284,7 +281,7 @@ data:
   # repository spec). If you want to override this, you need to bear in mind
   # this could be a security issue, a malicious user can send a PR to your repo
   # with a modification to your PipelineRun that would grab secrets, tunnel or
-  # others and then send a malicious webhook payload to the eventlistenner which
+  # others and then send a malicious webhook payload to the controller which
   # look like a authorized owner has send the PR to run it..
   bitbucket-cloud-check-source-ip: "true"
 
@@ -345,6 +342,24 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /live
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /live
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
