@@ -1,0 +1,62 @@
+<!doctype html><html lang=en-us dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Status #  GitHub #  When the pipeline finishes, the status will be added in the Github Check tabs with a short recap of how long each task of your pipeline took and the output of tkn pr describe.
+If there was a failure you can click on the &ldquo;Re-Run&rdquo; button on the left to rerun the Pipeline or you can issue a issue comment with a line starting and finishing with the string /retest to ask Pipelines as Code to retest the current PR."><meta name=theme-color content="#FFFFFF"><meta name=color-scheme content="light dark"><meta property="og:title" content="PipelineRun status"><meta property="og:description" content="Status #  GitHub #  When the pipeline finishes, the status will be added in the Github Check tabs with a short recap of how long each task of your pipeline took and the output of tkn pr describe.
+If there was a failure you can click on the &ldquo;Re-Run&rdquo; button on the left to rerun the Pipeline or you can issue a issue comment with a line starting and finishing with the string /retest to ask Pipelines as Code to retest the current PR."><meta property="og:type" content="article"><meta property="og:url" content="/docs/guide/statuses/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2022-03-28T22:58:57+02:00"><title>PipelineRun status | Pipelines as Code</title><link rel=manifest href=/manifest.json><link rel=icon href=/favicon.png type=image/x-icon><link rel=stylesheet href=/book.min.82c5dbd23447cee0b4c2aa3ed08ce0961faa40e1fa370eee4f8c9f02e0d46b5f.css><script defer src=/flexsearch.min.js></script>
+<script defer src=/en.search.min.d41ac4717c2331e33ce2b92d5187af5759f44dc80aea4d4f142d838dcc2c9536.js></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/><img src=/pipelines-logo.svg alt=Logo><span>Pipelines as Code</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><span>Installation</span><ul><li><a href=/docs/install/overview/>Overview</a></li><li><a href=/docs/install/installation/>Infrastructure install</a></li><li><a href=/docs/install/settings/>Settings</a></li><li><a href=/docs/install/github_apps/>Github Apps</a></li><li><a href=/docs/install/github_webhook/>Github Webhook</a></li><li><a href=/docs/install/gitlab/>Gitlab</a></li><li><a href=/docs/install/bitbucket_cloud/>Bitbucket Cloud</a></li><li><a href=/docs/install/bitbucket_server/>Bitbucket Server</a></li><li><a href=/docs/install/kubernetes/>Kubernetes</a></li></ul></li><li><span>Usage Guide</span><ul><li><a href=/docs/guide/repositorycrd/>Repository CRD</a></li><li><a href=/docs/guide/resolver/>Resolver</a></li><li><a href=/docs/guide/autoringprs/>Authoring PipelineRun</a></li><li><a href=/docs/guide/running/>Running the PipelineRun</a></li><li><a href=/docs/guide/statuses/ class=active>PipelineRun status</a></li><li><a href=/docs/guide/privaterepo/>Private Repositories</a></li><li><a href=/docs/guide/cleanups/>PipelineRuns Cleanup</a></li><li><a href=/docs/guide/cli/>CLI tkn-pac</a></li></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>PipelineRun status</strong>
+<label for=toc-control><img src=/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#status>Status</a><ul><li><a href=#github>GitHub</a></li><li><a href=#crd>CRD</a></li><li><a href=#notifications>Notifications</a></li></ul></li></ul></nav></aside></header><article class=markdown><h1 id=status>Status
+<a class=anchor href=#status>#</a></h1><h2 id=github>GitHub
+<a class=anchor href=#github>#</a></h2><p>When the pipeline finishes, the status will be added in the Github Check tabs
+with a short recap of how long each task of your pipeline took and the output of
+<code>tkn pr describe</code>.</p><p>If there was a failure you can click on the &ldquo;Re-Run&rdquo; button on the left to rerun
+the Pipeline or you can issue a issue comment with a line starting and finishing
+with the string <code>/retest</code> to ask Pipelines as Code to retest the current PR.</p><p>Example :</p><div class=highlight><pre tabindex=0 style=color:#272822;background-color:#fafafa;-moz-tab-size:2;-o-tab-size:2;tab-size:2><code class=language-text data-lang=text><span style=display:flex><span>Thanks for contributing! This is a much needed bugfix! ❤️
+</span></span><span style=display:flex><span>The failure is not with your PR but seems to be an infra issue.
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>/retest
+</span></span></code></pre></div><h2 id=crd>CRD
+<a class=anchor href=#crd>#</a></h2><p>Status of your pipeline execution is stored inside the Repo CustomResource :</p><div class=highlight><pre tabindex=0 style=color:#272822;background-color:#fafafa;-moz-tab-size:2;-o-tab-size:2;tab-size:2><code class=language-console data-lang=console><span style=display:flex><span>% kubectl get repo -n pipelines-as-code-ci
+</span></span><span style=display:flex><span>NAME                  URL                                                        NAMESPACE             SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
+</span></span><span style=display:flex><span>pipelines-as-code-ci   https://github.com/openshift-pipelines/pipelines-as-code   pipelines-as-code-ci   True        Succeeded   59m         56m
+</span></span></code></pre></div><p>The last 5 status are stored inside the CustomResource and can be accessed
+directly like this :</p><div class=highlight><pre tabindex=0 style=color:#272822;background-color:#fafafa;-moz-tab-size:2;-o-tab-size:2;tab-size:2><code class=language-console data-lang=console><span style=display:flex><span>% kubectl get repo -n pipelines-as-code-ci -o json<span style=color:#111>|</span>jq .items<span style=color:#f92672>[]</span>.pipelinerun_status
+</span></span><span style=display:flex><span>[
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    &#34;completionTime&#34;: &#34;2021-05-05T11:00:05Z&#34;,
+</span></span><span style=display:flex><span>    &#34;conditions&#34;: [
+</span></span><span style=display:flex><span>      {
+</span></span><span style=display:flex><span>        &#34;lastTransitionTime&#34;: &#34;2021-05-05T11:00:05Z&#34;,
+</span></span><span style=display:flex><span>        &#34;message&#34;: &#34;Tasks Completed: 3 (Failed: 0, Cancelled 0), Skipped: 0&#34;,
+</span></span><span style=display:flex><span>        &#34;reason&#34;: &#34;Succeeded&#34;,
+</span></span><span style=display:flex><span>        &#34;status&#34;: &#34;True&#34;,
+</span></span><span style=display:flex><span>        &#34;type&#34;: &#34;Succeeded&#34;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    ],
+</span></span><span style=display:flex><span>    &#34;pipelineRunName&#34;: &#34;pipelines-as-code-test-run-7tr84&#34;,
+</span></span><span style=display:flex><span>    &#34;startTime&#34;: &#34;2021-05-05T10:53:43Z&#34;
+</span></span><span style=display:flex><span>  },
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    &#34;completionTime&#34;: &#34;2021-05-05T11:20:18Z&#34;,
+</span></span><span style=display:flex><span>    &#34;conditions&#34;: [
+</span></span><span style=display:flex><span>      {
+</span></span><span style=display:flex><span>        &#34;lastTransitionTime&#34;: &#34;2021-05-05T11:20:18Z&#34;,
+</span></span><span style=display:flex><span>        &#34;message&#34;: &#34;Tasks Completed: 3 (Failed: 0, Cancelled 0), Skipped: 0&#34;,
+</span></span><span style=display:flex><span>        &#34;reason&#34;: &#34;Succeeded&#34;,
+</span></span><span style=display:flex><span>        &#34;status&#34;: &#34;True&#34;,
+</span></span><span style=display:flex><span>        &#34;type&#34;: &#34;Succeeded&#34;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    ],
+</span></span><span style=display:flex><span>    &#34;pipelineRunName&#34;: &#34;pipelines-as-code-test-run-2fhhg&#34;,
+</span></span><span style=display:flex><span>    &#34;startTime&#34;: &#34;2021-05-05T11:11:20Z&#34;
+</span></span><span style=display:flex><span>  },
+</span></span><span style=display:flex><span>  [...]
+</span></span></code></pre></div><h2 id=notifications>Notifications
+<a class=anchor href=#notifications>#</a></h2><p>Notifications is not handled by Pipelines as Code, the only place where we
+notify a status in a interface is when we do a Pull Request on for example the
+Github checks interface to show the results of the pull request.</p><p>If you need some other type of notification you can use
+the <a href=https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#adding-finally-to-the-pipeline>finally feature of tekton pipeline</a>
+.</p><p>Here is an example task to send a slack message on failures (or success if you
+like) :</p><p><a href=https://github.com/chmouel/tekton-slack-task-status>https://github.com/chmouel/tekton-slack-task-status</a></p><p>The push pipeline of Pipelines as Code use this task, you can see the example
+here :</p><p><a href=https://github.com/openshift-pipelines/pipelines-as-code/blob/7b41cc3f769af40a84b7ead41c6f037637e95070/.tekton/push.yaml#L116>.tekton/push.yaml</a></p></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/openshift-pipelines/pipelines-as-code/commit/599df9cb0f53c7197d8c39ee7850f294da1e9a88 title="Last modified by Chmouel Boudjnah | March 28, 2022" target=_blank rel=noopener><img src=/svg/calendar.svg class=book-icon alt=Calendar>
+<span>March 28, 2022</span></a></div><div><a class="flex align-center" href=https://github.com/openshift-pipelines/pipelines-as-code/edit/main/docs/content/docs/guide/statuses.md target=_blank rel=noopener><img src=/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(n){const e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e.removeAllRanges(),e.addRange(t)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#status>Status</a><ul><li><a href=#github>GitHub</a></li><li><a href=#crd>CRD</a></li><li><a href=#notifications>Notifications</a></li></ul></li></ul></nav></div></aside></main></body></html>
