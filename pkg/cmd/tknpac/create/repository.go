@@ -3,6 +3,7 @@ package create
 import (
 	"context"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -141,7 +142,7 @@ func getOrCreateNamespace(ctx context.Context, opts *RepoOptions) error {
 		chosenNS = autoNS
 	}
 	// check if the namespace exists if it does just exit
-	_, err := opts.Run.Clients.Kube.CoreV1().Namespaces().Get(ctx, chosenNS, metav1.GetOptions{})
+	_, err := opts.Run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Namespaces().Get(ctx, chosenNS, metav1.GetOptions{})
 	if err == nil {
 		opts.Repository.Namespace = chosenNS
 		return nil
@@ -160,7 +161,7 @@ func getOrCreateNamespace(ctx context.Context, opts *RepoOptions) error {
 		return fmt.Errorf("you need to create the target namespace first")
 	}
 
-	_, err = opts.Run.Clients.Kube.CoreV1().Namespaces().Create(ctx,
+	_, err = opts.Run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Namespaces().Create(ctx,
 		&v1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: chosenNS,

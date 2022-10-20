@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/kcp-dev/logicalcluster/v2"
 	"testing"
 
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/params"
@@ -14,6 +15,6 @@ func NSTearDown(ctx context.Context, t *testing.T, runcnx *params.Run, targetNS 
 	err := runcnx.Clients.PipelineAsCode.PipelinesascodeV1alpha1().Repositories(targetNS).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{})
 	assert.NilError(t, err)
 	runcnx.Clients.Log.Infof("Deleting NS %s", targetNS)
-	err = runcnx.Clients.Kube.CoreV1().Namespaces().Delete(ctx, targetNS, metav1.DeleteOptions{})
+	err = runcnx.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Namespaces().Delete(ctx, targetNS, metav1.DeleteOptions{})
 	assert.NilError(t, err)
 }

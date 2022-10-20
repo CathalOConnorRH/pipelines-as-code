@@ -3,26 +3,26 @@ package clients
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
-
+	"github.com/kcp-dev/client-go/clients/clientset/versioned"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/consoleui"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/generated/clientset/versioned"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/params/info"
 	"github.com/pkg/errors"
 	versioned2 "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	"go.uber.org/zap"
+	"io"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
+	// "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"net/http"
 )
 
 type Clients struct {
 	ClientInitialized bool
 	PipelineAsCode    versioned.Interface
 	Tekton            versioned2.Interface
-	Kube              kubernetes.Interface
+	Kube              kubernetes.ClusterInterface
 	HTTP              http.Client
 	Log               *zap.SugaredLogger
 	Dynamic           dynamic.Interface
@@ -52,7 +52,7 @@ func (c *Clients) GetURL(ctx context.Context, url string) ([]byte, error) {
 }
 
 // Set kube client based on config
-func (c *Clients) kubeClient(config *rest.Config) (kubernetes.Interface, error) {
+func (c *Clients) kubeClient(config *rest.Config) (kubernetes.ClusterInterface, error) {
 	k8scs, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to create k8s client from config")

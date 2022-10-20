@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
-
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/adapter"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/kubeinteraction"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/params"
 	evadapter "knative.dev/eventing/pkg/adapter/v2"
 	"knative.dev/pkg/signals"
+	"log"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	go func() {
-		if err := run.WatchConfigMapChanges(ctx, run); err != nil {
+		if err := run.WatchConfigMapChanges(ctx, run, ctrl.Request{}); err != nil {
 			log.Fatal(err)
 		}
 	}()

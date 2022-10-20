@@ -3,6 +3,7 @@ package reconciler
 import (
 	"context"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 	"path/filepath"
 	"strconv"
 
@@ -32,7 +33,7 @@ func (r *Reconciler) detectProvider(ctx context.Context, logger *zap.SugaredLogg
 	case "github", "github-enterprise":
 		gh := &github.Provider{}
 		if event.InstallationID != 0 {
-			if err := gh.InitAppClient(ctx, r.run.Clients.Kube, event); err != nil {
+			if err := gh.InitAppClient(ctx, r.run.Clients.Kube.Cluster(logicalcluster.Name{}), event); err != nil {
 				return nil, nil, err
 			}
 		}

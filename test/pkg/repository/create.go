@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/kcp-dev/logicalcluster/v2"
 
 	pacv1alpha1 "github.com/openshift-pipelines/pipelines-as-code/pkg/apis/pipelinesascode/v1alpha1"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/params"
@@ -11,7 +12,7 @@ import (
 
 func CreateNS(ctx context.Context, targetNS string, cs *params.Run) error {
 	nsSpec := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: targetNS}}
-	_, err := cs.Clients.Kube.CoreV1().Namespaces().Create(ctx, nsSpec, metav1.CreateOptions{})
+	_, err := cs.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Namespaces().Create(ctx, nsSpec, metav1.CreateOptions{})
 	cs.Clients.Log.Infof("Namespace %s created", targetNS)
 	return err
 }

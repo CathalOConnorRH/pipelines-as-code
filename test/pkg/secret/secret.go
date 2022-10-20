@@ -2,6 +2,7 @@ package secret
 
 import (
 	"context"
+	"github.com/kcp-dev/logicalcluster/v2"
 
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/params"
 	v1 "k8s.io/api/core/v1"
@@ -16,6 +17,6 @@ func Create(ctx context.Context, runcnx *params.Run, secretData map[string]strin
 		},
 	}
 	secret.StringData = secretData
-	_, err := runcnx.Clients.Kube.CoreV1().Secrets(targetNamespace).Create(ctx, secret, v12.CreateOptions{})
+	_, err := runcnx.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Secrets(targetNamespace).Create(ctx, secret, v12.CreateOptions{})
 	return err
 }

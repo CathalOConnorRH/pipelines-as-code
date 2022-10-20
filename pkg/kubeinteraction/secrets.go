@@ -3,6 +3,7 @@ package kubeinteraction
 import (
 	"context"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 	"net/url"
 	"strings"
 
@@ -35,7 +36,7 @@ func (k Interaction) createSecret(ctx context.Context, secretData map[string]str
 		},
 	}
 	secret.StringData = secretData
-	_, err := k.Run.Clients.Kube.CoreV1().Secrets(targetNamespace).Create(ctx, secret, metav1.CreateOptions{})
+	_, err := k.Run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Secrets(targetNamespace).Create(ctx, secret, metav1.CreateOptions{})
 	return err
 }
 
@@ -92,7 +93,7 @@ func (k Interaction) CreateBasicAuthSecret(ctx context.Context, logger *zap.Suga
 }
 
 func (k Interaction) GetSecret(ctx context.Context, secretopt GetSecretOpt) (string, error) {
-	secret, err := k.Run.Clients.Kube.CoreV1().Secrets(secretopt.Namespace).Get(
+	secret, err := k.Run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Secrets(secretopt.Namespace).Get(
 		ctx, secretopt.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", err
@@ -107,7 +108,7 @@ func GetBasicAuthSecretName() string {
 
 // DeleteBasicAuthSecret deletes the secret created for git-clone basic-auth
 func (k Interaction) DeleteBasicAuthSecret(ctx context.Context, logger *zap.SugaredLogger, targetNamespace, secretName string) error {
-	err := k.Run.Clients.Kube.CoreV1().Secrets(targetNamespace).Delete(ctx, secretName, metav1.DeleteOptions{})
+	err := k.Run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Secrets(targetNamespace).Delete(ctx, secretName, metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}

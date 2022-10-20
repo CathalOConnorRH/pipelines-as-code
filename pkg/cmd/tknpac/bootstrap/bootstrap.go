@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 	"strings"
 
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/cli"
@@ -246,14 +247,14 @@ func DetectPacInstallation(ctx context.Context, wantedNS string, run *params.Run
 
 	installed = true
 	if wantedNS != "" {
-		_, err := run.Clients.Kube.CoreV1().ConfigMaps(wantedNS).Get(ctx, infoConfigMap, metav1.GetOptions{})
+		_, err := run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().ConfigMaps(wantedNS).Get(ctx, infoConfigMap, metav1.GetOptions{})
 		if err == nil {
 			return installed, wantedNS, nil
 		}
 		return installed, "", fmt.Errorf("could not detect Pipelines as Code configmap in %s namespace : %w, please reinstall", wantedNS, err)
 	}
 
-	cms, err := run.Clients.Kube.CoreV1().ConfigMaps("").List(ctx, metav1.ListOptions{
+	cms, err := run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().ConfigMaps("").List(ctx, metav1.ListOptions{
 		LabelSelector: configMapPacLabel,
 	})
 	if err == nil {

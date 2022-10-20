@@ -3,6 +3,7 @@ package params
 import (
 	"context"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 	"os"
 	"strings"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/params/info"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 type Run struct {
@@ -27,12 +29,15 @@ func StringToBool(s string) bool {
 }
 
 // WatchConfigMapChanges watches for provide configmap
-func (r *Run) WatchConfigMapChanges(ctx context.Context, run *Run) error {
+func (r *Run) WatchConfigMapChanges(ctx context.Context, run *Run, req ctrl.Request) error {
 	ns := os.Getenv("SYSTEM_NAMESPACE")
 	if ns == "" {
 		return fmt.Errorf("failed to find pipelines-as-code installation namespace")
 	}
-	watcher, err := r.Clients.Kube.CoreV1().ConfigMaps(ns).Watch(ctx, v1.SingleObject(v1.ObjectMeta{
+	// Add the logical cluster to the context
+	ctx = logicalcluster.WithCluster(ctx, logicalcluster.New(req.ClusterName))
+
+	watcher, err := r.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().ConfigMaps(ns).Watch(ctx, v1.SingleObject(v1.ObjectMeta{
 		Name:      info.PACConfigmapName,
 		Namespace: ns,
 	}))
@@ -75,7 +80,7 @@ func (r *Run) UpdatePACInfo(ctx context.Context) error {
 		return fmt.Errorf("failed to find pipelines-as-code installation namespace")
 	}
 	// TODO: move this to kubeinteractions class so we can add unittests.
-	cfg, err := r.Clients.Kube.CoreV1().ConfigMaps(ns).Get(ctx, info.PACConfigmapName, v1.GetOptions{})
+	cfg, err := r.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().ConfigMaps(ns).Get(ctx, info.PACConfigmapName, v1.GetOptions{})
 	if err != nil {
 		return err
 	}

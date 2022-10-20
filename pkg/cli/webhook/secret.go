@@ -3,6 +3,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/apis/pipelinesascode/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -15,7 +16,7 @@ const (
 )
 
 func (w *Options) createWebhookSecret(ctx context.Context, response *response) error {
-	_, err := w.Run.Clients.Kube.CoreV1().Secrets(w.repositoryNamespace).Create(ctx, &corev1.Secret{
+	_, err := w.Run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Secrets(w.repositoryNamespace).Create(ctx, &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: w.repositoryName,
 		},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"path/filepath"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/apis/pipelinesascode"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/kubeinteraction"
@@ -32,7 +33,7 @@ func NewController() func(context.Context, configmap.Watcher) *controller.Impl {
 		}
 
 		go func() {
-			if err := run.WatchConfigMapChanges(ctx, run); err != nil {
+			if err := run.WatchConfigMapChanges(ctx, run, ctrl.Request{}); err != nil {
 				log.Fatal(err)
 			}
 		}()

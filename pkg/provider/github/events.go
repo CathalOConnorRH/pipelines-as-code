@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 	"net/http"
 	"os"
 	"path"
@@ -117,7 +118,7 @@ func (v *Provider) ParsePayload(ctx context.Context, run *params.Run, request *h
 	if id != -1 {
 		// get the app token if it exist first
 		var err error
-		event.Provider.Token, err = v.getAppToken(ctx, run.Clients.Kube, event.Provider.URL, id)
+		event.Provider.Token, err = v.getAppToken(ctx, run.Clients.Kube.Cluster(logicalcluster.Name{}), event.Provider.URL, id)
 		if err != nil {
 			return nil, err
 		}

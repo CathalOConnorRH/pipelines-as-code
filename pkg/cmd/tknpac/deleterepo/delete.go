@@ -3,6 +3,7 @@ package deleterepo
 import (
 	"context"
 	"fmt"
+	"github.com/kcp-dev/logicalcluster/v2"
 
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/cli"
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/cmd/tknpac/completion"
@@ -79,7 +80,7 @@ func repodelete(ctx context.Context, run *params.Run, names []string, opts *cli.
 			}
 			if repo.Spec.GitProvider != nil {
 				if repo.Spec.GitProvider.Secret != nil {
-					err = run.Clients.Kube.CoreV1().Secrets(opts.Namespace).Delete(ctx, repo.Spec.GitProvider.Secret.Name, v1.DeleteOptions{})
+					err = run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Secrets(opts.Namespace).Delete(ctx, repo.Spec.GitProvider.Secret.Name, v1.DeleteOptions{})
 					if err != nil {
 						fmt.Fprintf(ioStreams.ErrOut, "skipping deleting api secret %s\n", repo.Spec.GitProvider.Secret.Name)
 					} else {
@@ -87,7 +88,7 @@ func repodelete(ctx context.Context, run *params.Run, names []string, opts *cli.
 					}
 				}
 				if repo.Spec.GitProvider.WebhookSecret != nil {
-					err = run.Clients.Kube.CoreV1().Secrets(opts.Namespace).Delete(ctx, repo.Spec.GitProvider.WebhookSecret.Name, v1.DeleteOptions{})
+					err = run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().Secrets(opts.Namespace).Delete(ctx, repo.Spec.GitProvider.WebhookSecret.Name, v1.DeleteOptions{})
 					if err != nil {
 						fmt.Fprintf(ioStreams.ErrOut, "skipping deleting webhook secret %s\n", repo.Spec.GitProvider.WebhookSecret.Name)
 					} else {

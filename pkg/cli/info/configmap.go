@@ -2,6 +2,7 @@ package info
 
 import (
 	"context"
+	"github.com/kcp-dev/logicalcluster/v2"
 
 	"github.com/openshift-pipelines/pipelines-as-code/pkg/params"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,7 +17,7 @@ type Options struct {
 }
 
 func GetPACInfo(ctx context.Context, run *params.Run, targetNamespace string) (*Options, error) {
-	cm, err := run.Clients.Kube.CoreV1().ConfigMaps(targetNamespace).Get(ctx, infoConfigMap, metav1.GetOptions{})
+	cm, err := run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().ConfigMaps(targetNamespace).Get(ctx, infoConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +29,7 @@ func GetPACInfo(ctx context.Context, run *params.Run, targetNamespace string) (*
 }
 
 func UpdateInfoConfigMap(ctx context.Context, run *params.Run, opts *Options) error {
-	cm, err := run.Clients.Kube.CoreV1().ConfigMaps(opts.TargetNamespace).Get(ctx, infoConfigMap, metav1.GetOptions{})
+	cm, err := run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().ConfigMaps(opts.TargetNamespace).Get(ctx, infoConfigMap, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -39,7 +40,7 @@ func UpdateInfoConfigMap(ctx context.Context, run *params.Run, opts *Options) er
 	// the user will have read access to configmap
 	// but it might be the case, user is not admin and don't have access to update
 	// so don't error out, continue with printing a warning
-	_, err = run.Clients.Kube.CoreV1().ConfigMaps(opts.TargetNamespace).Update(ctx, cm, metav1.UpdateOptions{})
+	_, err = run.Clients.Kube.Cluster(logicalcluster.Name{}).CoreV1().ConfigMaps(opts.TargetNamespace).Update(ctx, cm, metav1.UpdateOptions{})
 	if err != nil {
 		run.Clients.Log.Warnf("failed to update pipelines-as-code-info configmap: %v", err)
 		return nil

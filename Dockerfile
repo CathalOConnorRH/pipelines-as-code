@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset AS builder
+FROM registry.ci.openshift.org/openshift/release:golang-1.17  AS builder
 
 ARG BINARY_NAME=pipelines-as-code-controller
 COPY . /src
